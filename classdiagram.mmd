@@ -1,0 +1,51 @@
+classDiagram
+    class Estudiante {
+        -codigo: string
+        -nombre: string
+        -curso: string
+        +verInformacion(): void
+    }
+
+    class Profesor {
+        -codigo: string
+        -nombre: string
+        -email: string
+        -especialidad: string
+        +verInformacion(): void
+    }
+
+    class Curso {
+        -codigo: string
+        -nombre: string
+        -profesor: string
+        -horario: string
+        +verInformacion(): void
+    }
+
+    class Usuario {
+        -username: string
+        -password: string
+        -tipo: string
+        +login(): boolean
+        +logout(): void
+    }
+
+    class PaginaPrincipal {
+        -titulo: string
+        -menuOpciones: string[]
+        +navegar(): void
+        +mostrarMenu(): void
+    }
+
+    class SistemaUNICONNECT {
+        -estudiantes: Estudiante[]
+        -profesores: Profesor[]
+        -cursos: Curso[]
+        +cargarDatos(): void
+        +mostrarListados(): void
+    }
+    SistemaUNICONNECT "1" --> "1..*" Estudiante : contiene
+    SistemaUNICONNECT "1" --> "1..*" Profesor : contiene
+    SistemaUNICONNECT "1" --> "1..*" Curso : contiene
+    Usuario "1" --> "1" PaginaPrincipal : accede a
+    PaginaPrincipal "1" --> "1" SistemaUNICONNECT : gestiona
