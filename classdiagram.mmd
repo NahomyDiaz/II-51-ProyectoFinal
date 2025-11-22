@@ -1,27 +1,4 @@
 classDiagram
-    class Estudiante {
-        -codigo: string
-        -nombre: string
-        -curso: string
-        +verInformacion(): void
-    }
-
-    class Profesor {
-        -codigo: string
-        -nombre: string
-        -email: string
-        -especialidad: string
-        +verInformacion(): void
-    }
-
-    class Curso {
-        -codigo: string
-        -nombre: string
-        -profesor: string
-        -horario: string
-        +verInformacion(): void
-    }
-
     class Usuario {
         -username: string
         -password: string
@@ -30,22 +7,79 @@ classDiagram
         +logout(): void
     }
 
-    class PaginaPrincipal {
-        -titulo: string
-        -menuOpciones: string[]
-        +navegar(): void
-        +mostrarMenu(): void
+    class Estudiante {
+        -codigo: string
+        -nombre: string
+        -email: string
+        -telefono: string
+        -curso: string
+        -fechaNacimiento: Date
+        +registrar(): boolean
+        +validarDatos(): boolean
+        +verInformacion(): void
+    }
+
+    class Profesor {
+        -codigo: string
+        -nombre: string
+        -email: string
+        -especialidad: string
+        -telefono: string
+        -departamento: string
+        +registrar(): boolean
+        +validarDatos(): boolean
+        +verInformacion(): void
+    }
+
+    class Curso {
+        -codigo: string
+        -nombre: string
+        -profesor: string
+        -horario: string
+        -aula: string
+        -creditos: int
+        +registrar(): boolean
+        +validarDatos(): boolean
+        +verInformacion(): void
+    }
+
+    class FormularioRegistro {
+        -campos: array
+        -validaciones: array
+        +validarHTML5(): boolean
+        +mostrarErrores(): void
+        +enviarDatos(): boolean
     }
 
     class SistemaUNICONNECT {
         -estudiantes: Estudiante[]
         -profesores: Profesor[]
         -cursos: Curso[]
+        -formularios: FormularioRegistro[]
         +cargarDatos(): void
         +mostrarListados(): void
+        +filtrarDatos(): array
+        +validarFormularios(): boolean
     }
+
+    class PaginaPrincipal {
+        -titulo: string
+        -menuOpciones: string[]
+        -modulos: string[]
+        +navegar(): void
+        +mostrarMenu(): void
+        +redirigirModulo(): void
+    }
+
+    %% RELACIONES ACTUALIZADAS
+    Usuario "1" --> "1" PaginaPrincipal : accede a
+    PaginaPrincipal "1" --> "1" SistemaUNICONNECT : gestiona
     SistemaUNICONNECT "1" --> "1..*" Estudiante : contiene
     SistemaUNICONNECT "1" --> "1..*" Profesor : contiene
     SistemaUNICONNECT "1" --> "1..*" Curso : contiene
-    Usuario "1" --> "1" PaginaPrincipal : accede a
-    PaginaPrincipal "1" --> "1" SistemaUNICONNECT : gestiona
+    SistemaUNICONNECT "1" --> "1..*" FormularioRegistro : gestiona
+    FormularioRegistro "1" --> "1" Estudiante : crea
+    FormularioRegistro "1" --> "1" Profesor : crea
+    FormularioRegistro "1" --> "1" Curso : crea
+    Profesor "1" --> "1..*" Curso : imparte
+    Estudiante "1" --> "1..*" Curso : matricula
