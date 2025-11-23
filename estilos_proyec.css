@@ -1,195 +1,234 @@
-
+/* RESET Y CONFIGURACIÓN BASE */
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* el padding no aumente el tamaño */
+    box-sizing: border-box;
 }
 
 body {
-    font-family: Arial, sans-serif; 
-    background-color: #2aaec3; 
-    color: #333; 
-    line-height: 1.5; /
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
 }
 
-/* CONTENEDOR PRINCIPAL */
 .container {
     width: 90%;
     max-width: 1200px;
-    margin: 0 auto; 
+    margin: 0 auto;
     padding: 20px;
 }
 
-/* ENCABEZADO */
+/* HEADER Y NAVEGACIÓN */
 header {
-    background: #2aaec3; 
+    background: #0f505f;
     color: white;
-    padding: 15px 0;
+    padding: 20px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .header-content {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .logo {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
+    color: #c8f0f6;
 }
 
-/* MENÚ DE NAVEGACIÓN */
 nav {
-    background-color: #87d1d1; 
-    padding: 10px 0;
+    background-color: #95dae3;
+    padding: 12px 0;
 }
 
 nav ul {
-    display: flex; 
-    list-style: none; 
+    display: flex;
+    list-style: none;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 nav ul li {
-    margin: 0 15px; 
+    margin: 0 15px;
 }
 
 nav ul li a {
-    color: #0a2024; 
-    text-decoration: none; 
-    padding: 8px 15px; 
-    border-radius: 4px;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    font-weight: 500;
 }
 
 nav ul li a:hover {
-    background-color: #51c2e2; 
+    background-color: #0f505f;
 }
 
-/* FORMULARIO DE LOGIN */
+/* FORMULARIOS */
 .login-container {
     display: flex;
-    justify-content: center; 
+    justify-content: center;
     align-items: center;
-    height: 80vh; /* 80% del alto de pantalla */
+    min-height: 70vh;
 }
 
 .login-form {
     background-color: white;
-    padding: 30px; 
-    border-radius: 8px; 
+    padding: 40px;
+    border-radius: 10px;
     width: 100%;
-    max-width: 400px; 
-}
-
-.login-form h2 {
-    color: #0f3c47;
-    text-align: center; 
-    margin-bottom: 20px;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .form-group {
-    margin-bottom: 20px; 
+    margin-bottom: 20px;
 }
 
 .form-group label {
-    margin-bottom: 5px;
+    display: block;
+    margin-bottom: 8px;
+    color: #0f505f;
+    font-weight: 500;
 }
 
-.form-group input {
-    width: 100%; /* ancho completo */
-    padding: 10px;
-    border: 1px solid #251515; 
-    border-radius: 4px; 
-}
-
-/* BOTÓN LOG */
-.btn {
-    background-color: #7de2f2; 
-    color: white; 
-    border: none; 
-    padding: 12px 20px; 
-    border-radius: 4px; 
-    cursor: pointer; 
-    width: 100%; 
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1e1e1;
+    border-radius: 5px;
     font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #a6d9e0;
+}
+
+/* BOTONES */
+.btn {
+    background-color: #b1f1fb;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
 .btn:hover {
-    background-color: #0f505f; 
+    background-color: #0f505f;
 }
 
-/* PÁGINA PRINCIPAL - MENÚ */
+/* PÁGINA PRINCIPAL */
 .principal-container {
-    display: flex;
-    justify-content: center; 
-    align-items: center;
-    min-height: 0vh;
+    padding: 30px 0;
+}
+
+.welcome-section {
+    text-align: center;
+    margin-bottom: 40px;
 }
 
 .menu-options {
-    display: grid; 
-    gap: 20px; /* Espacio entre elementos */
-    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin: 40px 0;
 }
 
 .menu-card {
-    background: #0f505f; 
-    color: white; 
-    padding: 30px 20px; 
-    border-radius: 8px; 
-    text-decoration: none;
+    background: linear-gradient(135deg, #0f505f, #82d4e2);
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
 }
 
 .menu-card:hover {
-    background: #0a3a47;
+    transform: translateY(-5px);
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-card {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background 0.3s ease;
 }
 
 /* TABLAS */
 table {
     width: 100%;
-    border-collapse: collapse; 
-}
-
-table th, table td {
-    padding: 12px 15px; 
-    text-align: left; 
-    border-bottom: 1px solid #0b232e; 
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 table th {
-    background-color: #9ef4ef; 
-    color: #0f505f; /
+    background: #0f505f;
+    color: white;
+    padding: 15px;
+    text-align: left;
+}
+
+table td {
+    padding: 15px;
+    border-bottom: 1px solid #e1e1e1;
 }
 
 table tr:hover {
-    background-color: #e6f7f7; 
+    background-color: #f8fdff;
 }
 
-
+/* FOOTER */
 footer {
-    background-color: #0f505f; 
-    color: white; 
-    text-align: center; 
-    padding: 15px 0; /* Espacio interno */
-    margin-top: 20px; /* Espacio arriba */
+    background-color: #0f505f;
+    color: white;
+    text-align: center;
+    padding: 25px 0;
+    margin-top: 40px;
 }
 
-/* ESTILOS PARA MÓVILES */
+/* RESPONSIVE */
 @media (max-width: 768px) {
     .header-content {
-        flex-direction: column; /* Apila logo y título */
-        text-align: center; /* Centra texto */
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
     }
     
     nav ul {
-        flex-direction: column; /* Menú vertical */
-    }
-    
-    nav ul li {
-        margin: 5px 0; /* Espacio vertical */
+        flex-direction: column;
+        gap: 5px;
     }
     
     .menu-options {
-        grid-template-columns: 1fr; /* 1 columna en móviles */
+        grid-template-columns: 1fr;
+    }
+    
+    .card-actions {
+        flex-direction: column;
     }
 }
