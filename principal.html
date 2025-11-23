@@ -1,12 +1,11 @@
-<!D<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UNICONNECT - Campus Virtual</title>
-<link rel="stylesheet" href="estilos_proyec.css">
+    <link rel="stylesheet" href="css/estilos_proyec.css">
 </head>
-
 <body>
     <header>
         <div class="container">
@@ -20,71 +19,40 @@
     <nav>
         <ul>
             <li><a href="principal.html">Inicio</a></li>
-            <li><a href="pages/estudiantes.html">Estudiantes</a></li>
-            <li><a href="pages/profesores.html">Profesores</a></li>
-            <li><a href="pages/cursos.html">Cursos</a></li>
+            <li><a href="estudiantes.html">Estudiantes</a></li>
+            <li><a href="profesores.html">Profesores</a></li>
+            <li><a href="cursos.html">Cursos</a></li>
             <li><a href="index.html">Cerrar Sesión</a></li>
         </ul>
     </nav>
     
     <main class="container">
-        <div class="principal-container">
-            <section class="welcome-section">
+        <section class="principal-container">
+            <article class="welcome-section">
                 <h2>Bienvenido al Campus UNICONNECT</h2>
                 <p>Selecciona el módulo al que deseas acceder:</p>
-            </section>
+            </article>
             
-            <div class="menu-options">
-                <!-- Módulo Estudiantes -->
-                <div class="menu-card">
+            <section class="menu-options">
+                <article class="menu-card">
                     <h3> Estudiantes</h3>
-
-                    <div class="card-actions">
-                        <a href="pages/estudiantes.html" class="btn-card">Ver Lista</a>
-                        <a href="pages/registro.html" class="btn-card secondary">Nuevo Estudiante</a>
-                    </div>
-                </div>
+                    <p>Gestiona información de estudiantes registrados en el sistema</p>
+                    <a href="estudiantes.html" class="btn-card">Acceder a Estudiantes</a>
+                </article>
                 
-                <!-- Módulo Profesores -->
-                <div class="menu-card">
-                    <h3> Profesores</h3>
-
-                    <div class="card-actions">
-                        <a href="pages/profesores.html" class="btn-card">Ver Lista</a>
-                        <a href="pages/registro-profesores.html" class="btn-card secondary">Nuevo Profesor</a>
-                    </div>
-                </div>
+                <article class="menu-card">
+                    <h3>Profesores</h3>
+                    <p>Administra datos del personal docente y sus especialidades</p>
+                    <a href="profesores.html" class="btn-card">Acceder a Profesores</a>
+                </article>
                 
-                <!-- Módulo Cursos -->
-                <div class="menu-card">
+                <article class="menu-card">
                     <h3> Cursos</h3>
-                    <p>Gestiona cursos académicos</p>
-                    <div class="card-actions">
-                        <a href="pages/cursos.html" class="btn-card">Ver Lista</a>
-                        <a href="pages/registro-cursos.html" class="btn-card secondary">Nuevo Curso</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Estadísticas Rápidas -->
-            <section class="stats-section">
-                <h3>Resumen del Sistema</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Estudiantes Registrados</h4>
-                        <p class="stat-number">4</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Profesores Activos</h4>
-                        <p class="stat-number">4</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Cursos Disponibles</h4>
-                        <p class="stat-number">4</p>
-                    </div>
-                </div>
+                    <p>Gestiona cursos académicos, horarios y asignaciones</p>
+                    <a href="cursos.html" class="btn-card">Acceder a Cursos</a>
+                </article>
             </section>
-        </div>
+        </section>
     </main>
     
     <footer>
