@@ -5,159 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UNICONNECT - Registro Estudiantes</title>
     <link rel="stylesheet" href="estilos_proyec.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <header>
-        <div class="logo">UNICONNECT</div>
-        <h1>Registro de Estudiantes</h1>
-    </header>
-
-    <nav>
-        <ul>
-            <li><a href="principal.html">Inicio</a></li>
-            <li><a href="profesores.html">Profesores</a></li>
-            <li><a href="cursos.html">Cursos</a></li>
-            <li><a href="index.html">Cerrar Sesión</a></li>
-        </ul>
-    </nav>
-
-    <main class="container">
-        <section class="form-section">
-            <h2>Nuevo Estudiante</h2>
-            
-            <form class="registro-form" id="formEstudiante">
-                <div class="form-group">
-                    <label for="codigo">Código de Estudiante:</label>
-                    <input type="text" id="codigo" name="codigo" 
-                           pattern="[A-Z]{2}-[0-9]{2}" 
-                           title="Formato: II-51 (2 letras, guión, 2 números)"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="nombre">Nombre Completo:</label>
-                    <input type="text" id="nombre" name="nombre" 
-                           minlength="3" maxlength="50"
-                           title="Mínimo 3 caracteres"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Correo Electrónico:</label>
-                    <input type="email" id="email" name="email" 
-                           placeholder="ejemplo@uniconnect.edu"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="telefono">Teléfono:</label>
-                    <input type="tel" id="telefono" name="telefono" 
-                           pattern="[0-9]{9}"
-                           title="9 dígitos sin espacios"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="curso">Curso Asignado:</label>
-                    <select id="curso" name="curso" required>
-                        <option value="">Seleccione un curso</option>
-                        <option value="Programacion Internet">Programación Internet</option>
-                        <option value="Administración">Administración</option>
-                        <option value="Psicologia">Psicología</option>
-                        <option value="Derecho">Derecho</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="fechaNacimiento">Fecha de Nacimiento:</label>
-                    <input type="date" id="fechaNacimiento" name="fechaNacimiento" 
-                           required>
-                </div>
-
-                <button type="submit" class="btn">Registrar Estudiante</button>
-                <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
-            </form>
-
-            <div id="mensajeExito" style="display: none;" class="mensaje-exito">
-                Estudiante registrado exitosamente!
-            </div>
-
-            <div id="mensajeError" style="display: none;" class="mensaje-error">
-                Error al registrar estudiante
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2023 UNICONNECT - Todos los derechos reservados</p>
-    </footer>
-
-    <script>
-        // CONFIGURACION DE SUPABASE
-        const supabaseUrl = 'https://iqepyjqlnlbwtuehrngr.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxZXB5anFsbmxid3R1ZWhybmdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNTg2MDQsImV4cCI6MjA3OTkzNDYwNH0.C-WwzpilT9jUsVXhoOLjDiVJrkcnfl7XsBxIZLba1K4';
+    <div class="form-container">
+        <h1>Registro de Estudiante</h1>
         
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        // Manejar el envio del formulario
-        document.getElementById('formEstudiante').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        <form id="formEstudiante">
+            <div class="form-group">
+                <label for="codigo">Código:</label>
+                <input type="text" id="codigo" required 
+                       pattern="[A-Z]{2}-[0-9]{2}" 
+                       placeholder="EJ: AB-12">
+            </div>
             
-            const boton = this.querySelector('button[type="submit"]');
-            const textoOriginal = boton.textContent;
-            boton.textContent = 'Registrando...';
-            boton.disabled = true;
-
-            const estudianteData = {
-                codigo: document.getElementById('codigo').value,
-                nombre: document.getElementById('nombre').value,
-                email: document.getElementById('email').value,
-                telefono: document.getElementById('telefono').value,
-                curso: document.getElementById('curso').value,
-                fecha_nacimiento: document.getElementById('fechaNacimiento').value
-            };
-
-            try {
-                const { data, error } = await supabase
-                    .from('estudiantes')
-                    .insert([estudianteData]);
-
-                if (error) {
-                    throw error;
-                }
-
-                mostrarMensaje('exito', 'Estudiante registrado exitosamente!');
-                this.reset();
-
-            } catch (error) {
-                mostrarMensaje('error', 'Error: ' + error.message);
-                
-            } finally {
-                boton.textContent = textoOriginal;
-                boton.disabled = false;
-            }
-        });
-
-        function mostrarMensaje(tipo, mensaje) {
-            document.getElementById('mensajeExito').style.display = 'none';
-            document.getElementById('mensajeError').style.display = 'none';
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" required 
+                       minlength="3" placeholder="Nombre completo">
+            </div>
             
-            if (tipo === 'exito') {
-                const elemento = document.getElementById('mensajeExito');
-                elemento.textContent = mensaje;
-                elemento.style.display = 'block';
-                
-                setTimeout(() => {
-                    elemento.style.display = 'none';
-                }, 4000);
-                
-            } else if (tipo === 'error') {
-                const elemento = document.getElementById('mensajeError');
-                elemento.textContent = mensaje;
-                elemento.style.display = 'block';
-            }
-        }
-    </script>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required 
+                       placeholder="ejemplo@uniconnect.edu">
+            </div>
+            
+            <div class="form-group">
+                <label for="telefono">Teléfono:</label>
+                <input type="tel" id="telefono" required 
+                       pattern="[0-9]{9}" placeholder="9 dígitos">
+            </div>
+            
+            <div class="form-group">
+                <label for="curso">Curso:</label>
+                <select id="curso" required>
+                    <option value="">Seleccione curso</option>
+                    <option value="Programacion Internet">Programación Internet</option>
+                    <option value="Administración">Administración</option>
+                    <option value="Psicologia">Psicología</option>
+                    <option value="Derecho">Derecho</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="fechaNacimiento">Fecha Nacimiento:</label>
+                <input type="date" id="fechaNacimiento" required>
+            </div>
+            
+            <button type="submit" id="btnRegistrar">Registrar Estudiante</button>
+        </form>
+        
+        <div id="mensaje" class="mensaje" style="display: none;"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
