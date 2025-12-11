@@ -4,111 +4,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UNICONNECT - Registro Estudiantes</title>
-    <link rel="stylesheet" href="estilos_proyec.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .mensaje {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .exito {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="logo">UNICONNECT</div>
-        <h1>Registro de Estudiantes</h1>
-    </header>
-
-    <nav>
-        <ul>
-            <li><a href="principal.html">Inicio</a></li>
-            <li><a href="profesores.html">Profesores</a></li>
-            <li><a href="cursos.html">Cursos</a></li>
-            <li><a href="index.html">Cerrar Sesión</a></li>
-        </ul>
-    </nav>
-
-    <main class="container">
-        <section class="form-section">
-            <h2>Nuevo Estudiante</h2>
+    <div class="form-container">
+        <h1>Registro de Estudiante</h1>
+        
+        <form id="formEstudiante">
+            <div class="form-group">
+                <label for="codigo">Código:</label>
+                <input type="text" id="codigo" required 
+                       pattern="[A-Z]{2}-[0-9]{2}" 
+                       placeholder="EJ: AB-12">
+            </div>
             
-            <form class="registro-form" id="formEstudiante">
-                <div class="form-group">
-                    <label for="codigo">Código de Estudiante:</label>
-                    <input type="text" id="codigo" name="codigo" 
-                           pattern="[A-Z]{2}-[0-9]{2}" 
-                           title="Formato: II-51 (2 letras, guión, 2 números)"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="nombre">Nombre Completo:</label>
-                    <input type="text" id="nombre" name="nombre" 
-                           minlength="3" maxlength="50"
-                           title="Mínimo 3 caracteres"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Correo Electrónico:</label>
-                    <input type="email" id="email" name="email" 
-                           placeholder="ejemplo@uniconnect.edu"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="telefono">Teléfono:</label>
-                    <input type="tel" id="telefono" name="telefono" 
-                           pattern="[0-9]{9}"
-                           title="9 dígitos sin espacios"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="curso">Curso Asignado:</label>
-                    <select id="curso" name="curso" required>
-                        <option value="">Seleccione un curso</option>
-                        <option value="Programacion Internet">Programación Internet</option>
-                        <option value="Administración">Administración</option>
-                        <option value="Psicologia">Psicología</option>
-                        <option value="Derecho">Derecho</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="fechaNacimiento">Fecha de Nacimiento:</label>
-                    <input type="date" id="fechaNacimiento" name="fechaNacimiento" 
-                           required>
-                </div>
-
-                <button type="submit" class="btn">Registrar Estudiante</button>
-                <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
-            </form>
-
-            <div id="mensajeExito" style="display: none;" class="mensaje-exito">
-                Estudiante registrado exitosamente!
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" required 
+                       minlength="3" placeholder="Nombre completo">
             </div>
-
-            <div id="mensajeError" style="display: none;" class="mensaje-error">
-                Error al registrar estudiante
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required 
+                       placeholder="ejemplo@uniconnect.edu">
             </div>
-        </section>
-    </main>
+            
+            <div class="form-group">
+                <label for="telefono">Teléfono:</label>
+                <input type="tel" id="telefono" required 
+                       pattern="[0-9]{9}" placeholder="9 dígitos">
+            </div>
+            
+            <div class="form-group">
+                <label for="curso">Curso:</label>
+                <select id="curso" required>
+                    <option value="">Seleccione curso</option>
+                    <option value="Programacion Internet">Programación Internet</option>
+                    <option value="Administración">Administración</option>
+                    <option value="Psicologia">Psicología</option>
+                    <option value="Derecho">Derecho</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="fechaNacimiento">Fecha Nacimiento:</label>
+                <input type="date" id="fechaNacimiento" required>
+            </div>
+            
+            <button type="submit" id="btnRegistrar">Registrar Estudiante</button>
+        </form>
+        
+        <div id="mensaje" class="mensaje" style="display: none;"></div>
+    </div>
 
-    <footer>
-        <p>&copy; 2023 UNICONNECT - Todos los derechos reservados</p>
-    </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // CONFIGURACION DE SUPABASE
+        // Configuración de Supabase
         const supabaseUrl = 'https://iqepyjqlnlbwtuehrngr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxZXB5anFsbmxid3R1ZWhybmdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNTg2MDQsImV4cCI6MjA3OTkzNDYwNH0.C-WwzpilT9jUsVXhoOLjDiVJrkcnfl7XsBxIZLba1K4';
         
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        // Manejar el envio del formulario
+        
+        // Manejar el formulario
         document.getElementById('formEstudiante').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const boton = this.querySelector('button[type="submit"]');
+            const boton = document.getElementById('btnRegistrar');
             const textoOriginal = boton.textContent;
             boton.textContent = 'Registrando...';
             boton.disabled = true;
-
+            
             const estudianteData = {
                 codigo: document.getElementById('codigo').value,
                 nombre: document.getElementById('nombre').value,
@@ -117,46 +163,41 @@
                 curso: document.getElementById('curso').value,
                 fecha_nacimiento: document.getElementById('fechaNacimiento').value
             };
-
+            
             try {
                 const { data, error } = await supabase
                     .from('estudiantes')
                     .insert([estudianteData]);
-
-                if (error) {
-                    throw error;
-                }
-
-                mostrarMensaje('exito', 'Estudiante registrado exitosamente!');
-                this.reset();
-
-            } catch (error) {
-                mostrarMensaje('error', 'Error: ' + error.message);
                 
+                if (error) throw error;
+                
+                mostrarMensaje('Estudiante registrado con éxito!', 'exito');
+                this.reset();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                let mensajeError = 'Error al registrar estudiante';
+                
+                if (error.code === '23505') {
+                    mensajeError = 'El código de estudiante ya existe';
+                }
+                
+                mostrarMensaje(mensajeError, 'error');
             } finally {
                 boton.textContent = textoOriginal;
                 boton.disabled = false;
             }
         });
-
-        function mostrarMensaje(tipo, mensaje) {
-            document.getElementById('mensajeExito').style.display = 'none';
-            document.getElementById('mensajeError').style.display = 'none';
+        
+        function mostrarMensaje(mensaje, tipo) {
+            const divMensaje = document.getElementById('mensaje');
+            divMensaje.textContent = mensaje;
+            divMensaje.className = 'mensaje ' + tipo;
+            divMensaje.style.display = 'block';
             
-            if (tipo === 'exito') {
-                const elemento = document.getElementById('mensajeExito');
-                elemento.textContent = mensaje;
-                elemento.style.display = 'block';
-                
-                setTimeout(() => {
-                    elemento.style.display = 'none';
-                }, 4000);
-                
-            } else if (tipo === 'error') {
-                const elemento = document.getElementById('mensajeError');
-                elemento.textContent = mensaje;
-                elemento.style.display = 'block';
-            }
+            setTimeout(() => {
+                divMensaje.style.display = 'none';
+            }, 5000);
         }
     </script>
 </body>
