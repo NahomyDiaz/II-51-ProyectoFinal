@@ -37,27 +37,38 @@ function configurarBuscador() {
     });
 }
 
-// Cargar estudiantes desde Supabase
+// Cargar estudiantes desde Supabase con manejo de errores mejorado
 async function cargarEstudiantes() {
     try {
         console.log('Cargando estudiantes desde Supabase...');
         
-        const { data: estudiantes, error } = await supabase
+        const { data: estudiantes, error, count } = await supabase
             .from('estudiantes')
-            .select('*')
+            .select('*', { count: 'exact' })
             .order('created_at', { ascending: false });
         
         if (error) {
             console.error('Error de Supabase:', error);
+            
+            // Mostrar mensaje específico según el error
+            if (error.code === 'PGRST116') {
+                console.log('La tabla está vacía, mostrando mensaje informativo');
+                mostrarEstudiantes([]);
+                return;
+            }
+            
             throw error;
         }
         
-        console.log('Estudiantes cargados:', estudiantes);
-        mostrarEstudiantes(estudiantes);
+        console.log(`✓ ${estudiantes?.length || 0} estudiantes cargados correctamente`);
+        mostrarEstudiantes(estudiantes || []);
         
     } catch (error) {
         console.error('Error al cargar estudiantes:', error);
-        mostrarMensaje('Error al cargar los estudiantes: ' + error.message, 'error');
+        mostrarMensaje(`Error al cargar los estudiantes: ${error.message}`, 'error');
+        
+        // Mostrar tabla vacía en caso de error
+        mostrarEstudiantes([]);
     }
 }
 
