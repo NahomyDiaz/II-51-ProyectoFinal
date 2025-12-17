@@ -3,60 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNICONNECT</title>
+    <title>UNICONNECT - Gestión de Cursos</title>
     <link rel="stylesheet" href="estilos_proyec.css">
+    <link rel="stylesheet" href="estilos_cursos.css">
 </head>
 <body>
     <header>
-        <div class="logo">UNICONNECT</div>
-        <h1>Cursos</h1>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">UNICONNECT</div>
+                <h1>Gestión de Cursos</h1>
+            </div>
+        </div>
     </header>
+
     <nav>
         <ul>
             <li><a href="principal.html">Inicio</a></li>
             <li><a href="estudiantes.html">Estudiantes</a></li>
             <li><a href="profesores.html">Profesores</a></li>
+            <li><a href="cursos.html" class="active">Cursos</a></li>
             <li><a href="index.html">Cerrar Sesión</a></li>
         </ul>
     </nav>
 
-    <main>
-        <h2>Lista de Cursos</h2>
-        <table>
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Profesor</th>
-                <th>Horario</th>
-            </tr>
-            <tr>
-                <td>II-51</td>
-                <td>Programacion Internet</td>
-                <td>Roberto Silva</td>
-                <td>Lunes y Miércoles 8:00-10:00</td>
-            </tr>
-            <tr>
-                <td>II-52</td>
-                <td>Administración</td>
-                <td>Elena Morales</td>
-                <td>Martes y Jueves 10:00-12:00</td>
-            </tr>
-            <tr>
-                <td>II-53</td>
-                <td>Psicologia</td>
-                <td>Miguel Torres</td>
-                <td>Lunes y Miércoles 14:00-16:00</td>
-            </tr>
-            <tr>
-                <td>II-54</td>
-                <td>Derecho</td>
-                <td>Carmen Vargas</td>
-                <td>Martes y Jueves 16:00-18:00</td>
-            </tr>
-        </table>
+    <main class="container">
+        <section class="form-section">
+            <h2 id="form-titulo">Registrar Nuevo Curso</h2>
+            
+            <form class="registro-form" id="formCurso">
+                <input type="hidden" id="cursoId">
+                
+                <div class="form-group">
+                    <label for="codigo">Código del Curso:</label>
+                    <input type="text" id="codigo" 
+                           pattern="[A-Z]{2}-[0-9]{2}" 
+                           title="Formato: II-51, II-52, etc."
+                           placeholder="II-51"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre">Nombre del Curso:</label>
+                    <input type="text" id="nombre" 
+                           minlength="3" maxlength="100"
+                           title="Nombre del curso"
+                           placeholder="Programación Internet"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="profesor">Profesor:</label>
+                    <input type="text" id="profesor" 
+                           minlength="3" maxlength="100"
+                           title="Nombre del profesor"
+                           placeholder="Roberto Silva"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="horario">Horario:</label>
+                    <input type="text" id="horario" 
+                           placeholder="Lunes y Miércoles 8:00-10:00"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="creditos">Créditos:</label>
+                    <input type="number" id="creditos" 
+                           min="1" max="10"
+                           title="Número de créditos (1-10)"
+                           placeholder="4"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" 
+                              rows="4"
+                              maxlength="500"
+                              placeholder="Descripción del curso..."></textarea>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Registrar Curso</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelar">Cancelar</button>
+                </div>
+            </form>
+            
+            <div id="mensaje" class="mensaje"></div>
+        </section>
+        
+        <section class="list-section">
+            <h2>Cursos Registrados</h2>
+            
+            <div class="search-box">
+                <input type="text" id="buscar" placeholder="Buscar por código, nombre o profesor...">
+                <button class="btn btn-small" id="btnBuscar">Buscar</button>
+                <button class="btn btn-small btn-secondary" id="btnLimpiar">Limpiar</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Profesor</th>
+                            <th>Horario</th>
+                            <th>Créditos</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCursos">
+                        <tr>
+                            <td colspan="7" class="empty-message">Cargando cursos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
+
     <footer>
-        <p>&copy; 2023 UNICONNECT - Todos los derechos reservados</p>
+        <div class="container">
+            <p>&copy; 2023 UNICONNECT - Todos los derechos reservados</p>
+        </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="cursos.js"></script>
 </body>
 </html>

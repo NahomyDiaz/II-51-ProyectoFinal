@@ -1,203 +1,294 @@
-// profesores.js - Gestión de profesores con Supabase
+// profesores.js - Gestión de profesores con Supabase (versión simplificada)
 import { supabase } from './supabaseClient.js';
 
-class GestorProfesores {
-    constructor() {
-        this.profesorActual = null;
-        this.init();
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Página de profesores cargada');
+    
+    // Inicializar
+    cargarProfesores();
+    setupEventListeners();
+});
+
+// Configurar eventos
+function setupEventListeners() {
+    // Formulario de registro/edición
+    const form = document.getElementById('formProfesor');
+    if (form) {
+        form.addEventListener('submit', handleSubmit);
     }
-
-    async init() {
-        this.setupEventListeners();
-        await this.cargarProfesores();
-    }
-
-    setupEventListeners() {
-        // Formulario
-        const form = document.getElementById('formProfesor');
-        if (form) {
-            form.addEventListener('submit', (e) => this.handleSubmit(e));
-        }
-
-        // Botones
-        document.getElementById('btnCancelar')?.addEventListener('click', () => this.cancelarEdicion());
-        document.getElementById('btnBuscar')?.addEventListener('click', () => this.buscarProfesores());
-        document.getElementById('btnLimpiar')?.addEventListener('click', () => this.limpiarBusqueda());
-        
-        // Búsqueda al presionar Enter
-        document.getElementById('buscar')?.addEventListener('keypress', (e) => {
+    
+    // Botones
+    const btnCancelar = document.getElementById('btnCancelar');
+    const btnBuscar = document.getElementById('btnBuscar');
+    const btnLimpiar = document.getElementById('btnLimpiar');
+    
+    if (btnCancelar) btnCancelar.addEventListener('click', cancelarEdicion);
+    if (btnBuscar) btnBuscar.addEventListener('click', buscarProfesores);
+    if (btnLimpiar) btnLimpiar.addEventListener('click', limpiarBusqueda);
+    
+    // Buscar con Enter
+    const buscarInput = document.getElementById('buscar');
+    if (buscarInput) {
+        buscarInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                this.buscarProfesores();
+                buscarProfesores();
             }
         });
     }
+}
 
-    async handleSubmit(e) {
-        e.preventDefault();
-        
-        if (!this.validarFormulario()) {
-            return;
+// Variables globales
+let profesorEditando = null;
+
+// Manejar envío del formulario
+async function handleSubmit(e) {
+    e.preventDefault();
+    
+    console.log('📝 Enviando formulario...');
+    
+    // Validar formulario
+    if (!validarFormulario()) {
+        return;
+    }
+    
+    // Obtener datos del formulario
+    const profesorData = {
+        codigo: document.getElementById('codigo').value.trim(),
+        nombre: document.getElementById('nombre').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        especialidad: document.getElementById('especialidad').value.trim(),
+        departamento: document.getElementById('departamento').value,
+        telefono: document.getElementById('telefono').value.trim(),
+        experiencia: parseInt(document.getElementById('experiencia').value)
+    };
+    
+    console.log('Datos del profesor:', profesorData);
+    
+    const btnGuardar = document.getElementById('btnGuardar');
+    const textoOriginal = btnGuardar.textContent;
+    
+    // Cambiar estado del botón
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = 'Guardando...';
+    
+    try {
+        if (profesorEditando) {
+            // Actualizar profesor existente
+            await actualizarProfesor(profesorEditando.id, profesorData);
+            mostrarMensaje('✅ Profesor actualizado exitosamente', 'exito');
+        } else {
+            // Crear nuevo profesor
+            await crearProfesor(profesorData);
+            mostrarMensaje('✅ Profesor registrado exitosamente', 'exito');
         }
-
-        const profesor = this.obtenerDatosFormulario();
         
-        try {
-            const btnGuardar = document.getElementById('btnGuardar');
-            const textoOriginal = btnGuardar.textContent;
-            
-            btnGuardar.disabled = true;
-            btnGuardar.textContent = 'Guardando...';
-            
-            if (this.profesorActual) {
-                // Actualizar profesor existente
-                await this.actualizarProfesor(profesor);
-            } else {
-                // Crear nuevo profesor
-                await this.crearProfesor(profesor);
+        // Limpiar formulario y recargar lista
+        limpiarFormulario();
+        await cargarProfesores();
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        mostrarMensaje('❌ Error: ' + error.message, 'error');
+    } finally {
+        // Restaurar botón
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = textoOriginal;
+    }
+}
+
+// Validar formulario
+function validarFormulario() {
+    const codigo = document.getElementById('codigo').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const experiencia = document.getElementById('experiencia').value;
+    
+    // Validar código (PROF seguido de números)
+    if (!/^PROF\d{1,4}$/i.test(codigo)) {
+        mostrarMensaje('❌ El código debe ser PROF seguido de números (ej: PROF001)', 'error');
+        return false;
+    }
+    
+    // Validar email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        mostrarMensaje('❌ Ingrese un email válido', 'error');
+        return false;
+    }
+    
+    // Validar teléfono (9 dígitos)
+    if (!/^\d{9}$/.test(telefono)) {
+        mostrarMensaje('❌ El teléfono debe tener 9 dígitos', 'error');
+        return false;
+    }
+    
+    // Validar experiencia (0-50)
+    const expNum = parseInt(experiencia);
+    if (isNaN(expNum) || expNum < 0 || expNum > 50) {
+        mostrarMensaje('❌ La experiencia debe ser entre 0 y 50 años', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
+// Crear nuevo profesor
+async function crearProfesor(profesorData) {
+    console.log('Creando profesor:', profesorData);
+    
+    const { data, error } = await supabase
+        .from('profesores')
+        .insert([profesorData])
+        .select()
+        .single();
+    
+    if (error) {
+        console.error('Error Supabase:', error);
+        if (error.code === '23505') {
+            if (error.message.includes('profesores_codigo_key')) {
+                throw new Error('Ya existe un profesor con este código');
             }
-            
-            btnGuardar.textContent = textoOriginal;
-            btnGuardar.disabled = false;
-            
-        } catch (error) {
-            console.error('Error al guardar profesor:', error);
-            this.mostrarMensaje('Error al guardar el profesor: ' + error.message, 'error');
+            if (error.message.includes('profesores_email_key')) {
+                throw new Error('Ya existe un profesor con este email');
+            }
         }
+        throw new Error(error.message || 'Error al crear profesor');
     }
+    
+    return data;
+}
 
-    obtenerDatosFormulario() {
-        return {
-            codigo: document.getElementById('codigo').value,
-            nombre: document.getElementById('nombre').value,
-            email: document.getElementById('email').value,
-            especialidad: document.getElementById('especialidad').value,
-            departamento: document.getElementById('departamento').value,
-            telefono: document.getElementById('telefono').value,
-            experiencia: parseInt(document.getElementById('experiencia').value)
-        };
+// Actualizar profesor existente
+async function actualizarProfesor(id, profesorData) {
+    console.log('Actualizando profesor ID:', id);
+    
+    const { data, error } = await supabase
+        .from('profesores')
+        .update(profesorData)
+        .eq('id', id)
+        .select()
+        .single();
+    
+    if (error) {
+        console.error('Error Supabase:', error);
+        throw new Error(error.message || 'Error al actualizar profesor');
     }
+    
+    return data;
+}
 
-    validarFormulario() {
-        const codigo = document.getElementById('codigo').value;
-        const email = document.getElementById('email').value;
-        const telefono = document.getElementById('telefono').value;
-        
-        // Validar formato de código
-        if (!codigo.match(/^PROF\d{1,2}$/)) {
-            this.mostrarMensaje('El código debe tener el formato PROF1, PROF2, etc.', 'error');
-            return false;
-        }
-        
-        // Validar email
-        if (!email.includes('@')) {
-            this.mostrarMensaje('Por favor ingrese un email válido', 'error');
-            return false;
-        }
-        
-        // Validar teléfono
-        if (!telefono.match(/^\d{9}$/)) {
-            this.mostrarMensaje('El teléfono debe tener 9 dígitos', 'error');
-            return false;
-        }
-        
-        return true;
+// Cargar lista de profesores
+async function cargarProfesores() {
+    console.log('📋 Cargando profesores...');
+    
+    const tbody = document.getElementById('tablaProfesores');
+    if (!tbody) {
+        console.error('No se encontró tablaProfesores');
+        return;
     }
-
-    async crearProfesor(profesor) {
-        // Verificar si el código ya existe
-        const { data: existente, error: errorBusqueda } = await supabase
+    
+    // Mostrar estado de carga
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" style="text-align: center; padding: 20px;">
+                <div style="color: #4a90a4;">Cargando profesores...</div>
+            </td>
+        </tr>
+    `;
+    
+    try {
+        const { data: profesores, error } = await supabase
             .from('profesores')
-            .select('codigo')
-            .eq('codigo', profesor.codigo)
-            .single();
-        
-        if (existente) {
-            throw new Error('Ya existe un profesor con este código');
-        }
-        
-        // Insertar nuevo profesor
-        const { data, error } = await supabase
-            .from('profesores')
-            .insert([profesor]);
+            .select('*')
+            .order('nombre');
         
         if (error) {
             throw new Error(error.message);
         }
         
-        this.mostrarMensaje('Profesor registrado exitosamente', 'exito');
-        this.limpiarFormulario();
-        await this.cargarProfesores();
-    }
-
-    async actualizarProfesor(profesor) {
-        const { error } = await supabase
-            .from('profesores')
-            .update(profesor)
-            .eq('id', this.profesorActual.id);
-        
-        if (error) {
-            throw new Error(error.message);
-        }
-        
-        this.mostrarMensaje('Profesor actualizado exitosamente', 'exito');
-        this.cancelarEdicion();
-        await this.cargarProfesores();
-    }
-
-    async cargarProfesores() {
-        try {
-            const { data: profesores, error } = await supabase
-                .from('profesores')
-                .select('*')
-                .order('nombre');
-            
-            if (error) {
-                throw new Error(error.message);
-            }
-            
-            this.mostrarProfesores(profesores || []);
-            
-        } catch (error) {
-            console.error('Error al cargar profesores:', error);
-            this.mostrarMensaje('Error al cargar los profesores', 'error');
-        }
-    }
-
-    async buscarProfesores() {
-        const termino = document.getElementById('buscar').value.trim();
-        
-        if (!termino) {
-            await this.cargarProfesores();
-            return;
-        }
-        
-        try {
-            const { data: profesores, error } = await supabase
-                .from('profesores')
-                .select('*')
-                .or(`nombre.ilike.%${termino}%,codigo.ilike.%${termino}%,especialidad.ilike.%${termino}%`)
-                .order('nombre');
-            
-            if (error) {
-                throw new Error(error.message);
-            }
-            
-            this.mostrarProfesores(profesores || []);
-            
-        } catch (error) {
-            console.error('Error al buscar profesores:', error);
-            this.mostrarMensaje('Error al buscar profesores', 'error');
-        }
-    }
-
-    mostrarProfesores(profesores) {
-        const tbody = document.getElementById('tablaProfesores');
+        console.log('Profesores cargados:', profesores?.length || 0);
         
         if (!profesores || profesores.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="empty-message">No hay profesores registrados</td>
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #718096;">
+                        No hay profesores registrados
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        // Generar tabla
+        tbody.innerHTML = profesores.map(profesor => `
+            <tr>
+                <td>${profesor.codigo}</td>
+                <td>${profesor.nombre}</td>
+                <td>${profesor.email}</td>
+                <td>${profesor.especialidad}</td>
+                <td>${profesor.departamento}</td>
+                <td>${profesor.telefono}</td>
+                <td>${profesor.experiencia} años</td>
+                <td>
+                    <button onclick="editarProfesor(${profesor.id})" 
+                            style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+                        Editar
+                    </button>
+                    <button onclick="eliminarProfesor(${profesor.id})" 
+                            style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error cargando profesores:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 20px; color: #e53e3e;">
+                    Error al cargar profesores: ${error.message}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Buscar profesores
+async function buscarProfesores() {
+    const termino = document.getElementById('buscar').value.trim();
+    
+    if (!termino) {
+        await cargarProfesores();
+        return;
+    }
+    
+    console.log('🔍 Buscando:', termino);
+    
+    const tbody = document.getElementById('tablaProfesores');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" style="text-align: center; padding: 20px;">
+                <div style="color: #4a90a4;">Buscando...</div>
+            </td>
+        </tr>
+    `;
+    
+    try {
+        const { data: profesores, error } = await supabase
+            .from('profesores')
+            .select('*')
+            .or(`nombre.ilike.%${termino}%,codigo.ilike.%${termino}%,especialidad.ilike.%${termino}%,departamento.ilike.%${termino}%`)
+            .order('nombre');
+        
+        if (error) throw error;
+        
+        if (!profesores || profesores.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #718096;">
+                        No se encontraron profesores con "${termino}"
+                    </td>
                 </tr>
             `;
             return;
@@ -212,115 +303,131 @@ class GestorProfesores {
                 <td>${profesor.departamento}</td>
                 <td>${profesor.telefono}</td>
                 <td>${profesor.experiencia} años</td>
-                <td class="acciones">
-                    <button class="btn-accion btn-editar" onclick="gestorProfesores.editarProfesor(${profesor.id})">Editar</button>
-                    <button class="btn-accion btn-eliminar" onclick="gestorProfesores.eliminarProfesor(${profesor.id})">Eliminar</button>
+                <td>
+                    <button onclick="editarProfesor(${profesor.id})" 
+                            style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+                        Editar
+                    </button>
+                    <button onclick="eliminarProfesor(${profesor.id})" 
+                            style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                        Eliminar
+                    </button>
                 </td>
             </tr>
         `).join('');
-    }
-
-    editarProfesor(id) {
-        this.cargarProfesorParaEditar(id);
-    }
-
-    async cargarProfesorParaEditar(id) {
-        try {
-            const { data: profesor, error } = await supabase
-                .from('profesores')
-                .select('*')
-                .eq('id', id)
-                .single();
-            
-            if (error) {
-                throw new Error(error.message);
-            }
-            
-            if (profesor) {
-                this.profesorActual = profesor;
-                this.llenarFormulario(profesor);
-                
-                document.getElementById('form-titulo').textContent = 'Editar Profesor';
-                document.getElementById('btnGuardar').textContent = 'Actualizar Profesor';
-                
-                // Hacer scroll al formulario
-                document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
-            }
-            
-        } catch (error) {
-            console.error('Error al cargar profesor:', error);
-            this.mostrarMensaje('Error al cargar el profesor', 'error');
-        }
-    }
-
-    llenarFormulario(profesor) {
-        document.getElementById('profesorId').value = profesor.id;
-        document.getElementById('codigo').value = profesor.codigo;
-        document.getElementById('nombre').value = profesor.nombre;
-        document.getElementById('email').value = profesor.email;
-        document.getElementById('especialidad').value = profesor.especialidad;
-        document.getElementById('departamento').value = profesor.departamento;
-        document.getElementById('telefono').value = profesor.telefono;
-        document.getElementById('experiencia').value = profesor.experiencia;
-    }
-
-    async eliminarProfesor(id) {
-        if (!confirm('¿Está seguro de eliminar este profesor?')) {
-            return;
-        }
         
-        try {
-            const { error } = await supabase
-                .from('profesores')
-                .delete()
-                .eq('id', id);
-            
-            if (error) {
-                throw new Error(error.message);
-            }
-            
-            this.mostrarMensaje('Profesor eliminado exitosamente', 'exito');
-            await this.cargarProfesores();
-            
-        } catch (error) {
-            console.error('Error al eliminar profesor:', error);
-            this.mostrarMensaje('Error al eliminar el profesor', 'error');
-        }
-    }
-
-    cancelarEdicion() {
-        this.profesorActual = null;
-        this.limpiarFormulario();
-        
-        document.getElementById('form-titulo').textContent = 'Registrar Nuevo Profesor';
-        document.getElementById('btnGuardar').textContent = 'Registrar Profesor';
-    }
-
-    limpiarFormulario() {
-        document.getElementById('formProfesor').reset();
-        document.getElementById('profesorId').value = '';
-    }
-
-    limpiarBusqueda() {
-        document.getElementById('buscar').value = '';
-        this.cargarProfesores();
-    }
-
-    mostrarMensaje(texto, tipo) {
-        const mensaje = document.getElementById('mensaje');
-        mensaje.textContent = texto;
-        mensaje.className = `mensaje ${tipo}`;
-        
-        // Ocultar después de 5 segundos
-        setTimeout(() => {
-            mensaje.className = 'mensaje';
-        }, 5000);
+    } catch (error) {
+        console.error('Error buscando:', error);
+        mostrarMensaje('❌ Error al buscar: ' + error.message, 'error');
+        await cargarProfesores();
     }
 }
 
-// Inicializar cuando el DOM esté listo
-let gestorProfesores;
-document.addEventListener('DOMContentLoaded', () => {
-    gestorProfesores = new GestorProfesores();
-    window.gestorProfesores = gestorProfesores; // Hacerlo global para los onclick
-});
+// Editar profesor
+async function editarProfesor(id) {
+    console.log('✏️ Editando profesor ID:', id);
+    
+    try {
+        const { data: profesor, error } = await supabase
+            .from('profesores')
+            .select('*')
+            .eq('id', id)
+            .single();
+        
+        if (error) throw error;
+        
+        if (profesor) {
+            profesorEditando = profesor;
+            
+            // Llenar formulario
+            document.getElementById('codigo').value = profesor.codigo;
+            document.getElementById('nombre').value = profesor.nombre;
+            document.getElementById('email').value = profesor.email;
+            document.getElementById('especialidad').value = profesor.especialidad;
+            document.getElementById('departamento').value = profesor.departamento;
+            document.getElementById('telefono').value = profesor.telefono;
+            document.getElementById('experiencia').value = profesor.experiencia;
+            
+            // Cambiar título y botón
+            document.getElementById('form-titulo').textContent = 'Editar Profesor';
+            document.getElementById('btnGuardar').textContent = 'Actualizar Profesor';
+            
+            // Scroll al formulario
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+            
+            mostrarMensaje(`Editando a ${profesor.nombre}`, 'exito');
+        }
+        
+    } catch (error) {
+        console.error('Error cargando profesor:', error);
+        mostrarMensaje('❌ Error al cargar profesor: ' + error.message, 'error');
+    }
+}
+
+// Eliminar profesor
+async function eliminarProfesor(id) {
+    if (!confirm('¿Está seguro de eliminar este profesor?')) {
+        return;
+    }
+    
+    console.log('🗑️ Eliminando profesor ID:', id);
+    
+    try {
+        const { error } = await supabase
+            .from('profesores')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        mostrarMensaje('✅ Profesor eliminado exitosamente', 'exito');
+        await cargarProfesores();
+        
+        // Si estábamos editando este profesor, limpiar formulario
+        if (profesorEditando && profesorEditando.id === id) {
+            cancelarEdicion();
+        }
+        
+    } catch (error) {
+        console.error('Error eliminando:', error);
+        mostrarMensaje('❌ Error al eliminar: ' + error.message, 'error');
+    }
+}
+
+// Cancelar edición
+function cancelarEdicion() {
+    profesorEditando = null;
+    limpiarFormulario();
+    document.getElementById('form-titulo').textContent = 'Registrar Nuevo Profesor';
+    document.getElementById('btnGuardar').textContent = 'Registrar Profesor';
+    mostrarMensaje('Edición cancelada', 'exito');
+}
+
+// Limpiar formulario
+function limpiarFormulario() {
+    document.getElementById('formProfesor').reset();
+}
+
+// Limpiar búsqueda
+function limpiarBusqueda() {
+    document.getElementById('buscar').value = '';
+    cargarProfesores();
+}
+
+// Mostrar mensaje
+function mostrarMensaje(texto, tipo) {
+    const mensajeDiv = document.getElementById('mensaje');
+    if (!mensajeDiv) return;
+    
+    mensajeDiv.textContent = texto;
+    mensajeDiv.className = `mensaje ${tipo}`;
+    mensajeDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        mensajeDiv.style.display = 'none';
+    }, 5000);
+}
+
+// Hacer funciones globales para los botones onclick
+window.editarProfesor = editarProfesor;
+window.eliminarProfesor = eliminarProfesor;

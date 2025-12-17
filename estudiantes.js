@@ -82,15 +82,19 @@ class GestorEstudiantes {
     }
 
     obtenerDatosFormulario() {
-        return {
-            codigo: document.getElementById('codigo').value,
-            nombre: document.getElementById('nombre').value,
-            email: document.getElementById('email').value,
-            telefono: document.getElementById('telefono').value,
-            curso: document.getElementById('curso').value,
-            fecha_nacimiento: document.getElementById('fechaNacimiento').value
-        };
-    }
+    const now = new Date().toISOString();
+    
+    return {
+        codigo: document.getElementById('codigo').value,
+        nombre: document.getElementById('nombre').value,
+        email: document.getElementById('email').value,
+        telefono: document.getElementById('telefono').value,
+        curso: document.getElementById('curso').value,
+        fecha_nacimiento: document.getElementById('fechaNacimiento').value,
+        created_at: now,  // ← AÑADE ESTO
+        updated_at: now   // ← AÑADE ESTO
+    };
+}
 
     validarFormulario() {
         const codigo = document.getElementById('codigo').value;
