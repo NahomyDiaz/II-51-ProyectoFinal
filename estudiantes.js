@@ -1,343 +1,360 @@
+// estudiantes.js - Gestión de estudiantes con Supabase
 import { supabase } from './supabaseClient.js';
 
-// Variables globales
-let editando = false;
+class GestorEstudiantes {
+    constructor() {
+        this.estudianteActual = null;
+        this.init();
+    }
 
-// Cuando la página cargue
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Página cargada, conectando a Supabase...');
-    cargarEstudiantes();
-    configurarFormulario();
-    configurarBuscador();
-});
+    async init() {
+        this.setupEventListeners();
+        await this.cargarEstudiantes();
+        this.configurarFechaNacimiento();
+    }
 
-// Configurar el formulario
-function configurarFormulario() {
-    const formulario = document.getElementById('formEstudiante');
-    const btnCancelar = document.getElementById('btnCancelar');
-    
-    formulario.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        await guardarEstudiante();
-    });
-    
-    btnCancelar.addEventListener('click', function() {
-        resetearFormulario();
-    });
-}
-
-// Configurar el buscador
-function configurarBuscador() {
-    const inputBuscar = document.getElementById('buscar');
-    
-    inputBuscar.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            buscarEstudiantes();
+    setupEventListeners() {
+        // Formulario
+        const form = document.getElementById('formEstudiante');
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleSubmit(e));
         }
-    });
-}
 
-// Cargar estudiantes desde Supabase con manejo de errores mejorado
-async function cargarEstudiantes() {
-    try {
-        console.log('Cargando estudiantes desde Supabase...');
+        // Botones
+        document.getElementById('btnCancelar')?.addEventListener('click', () => this.cancelarEdicion());
+        document.getElementById('btnBuscar')?.addEventListener('click', () => this.buscarEstudiantes());
+        document.getElementById('btnLimpiar')?.addEventListener('click', () => this.limpiarBusqueda());
         
-        const { data: estudiantes, error, count } = await supabase
-            .from('estudiantes')
-            .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false });
-        
-        if (error) {
-            console.error('Error de Supabase:', error);
+        // Búsqueda al presionar Enter
+        document.getElementById('buscar')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.buscarEstudiantes();
+            }
+        });
+    }
+
+    configurarFechaNacimiento() {
+        const fechaInput = document.getElementById('fechaNacimiento');
+        if (fechaInput) {
+            const hoy = new Date();
+            const fechaMaxima = new Date();
+            fechaMaxima.setFullYear(hoy.getFullYear() - 16); // Mínimo 16 años
+            const fechaMinima = new Date();
+            fechaMinima.setFullYear(hoy.getFullYear() - 60); // Máximo 60 años
             
-            // Mostrar mensaje específico según el error
-            if (error.code === 'PGRST116') {
-                console.log('La tabla está vacía, mostrando mensaje informativo');
-                mostrarEstudiantes([]);
-                return;
+            fechaInput.max = fechaMaxima.toISOString().split('T')[0];
+            fechaInput.min = fechaMinima.toISOString().split('T')[0];
+        }
+    }
+
+    async handleSubmit(e) {
+        e.preventDefault();
+        
+        if (!this.validarFormulario()) {
+            return;
+        }
+
+        const estudiante = this.obtenerDatosFormulario();
+        
+        try {
+            const btnGuardar = document.getElementById('btnGuardar');
+            const textoOriginal = btnGuardar.textContent;
+            
+            btnGuardar.disabled = true;
+            btnGuardar.textContent = 'Guardando...';
+            
+            if (this.estudianteActual) {
+                // Actualizar estudiante existente
+                await this.actualizarEstudiante(estudiante);
+            } else {
+                // Crear nuevo estudiante
+                await this.crearEstudiante(estudiante);
             }
             
-            throw error;
+            btnGuardar.textContent = textoOriginal;
+            btnGuardar.disabled = false;
+            
+        } catch (error) {
+            console.error('Error al guardar estudiante:', error);
+            this.mostrarMensaje('Error al guardar el estudiante: ' + error.message, 'error');
         }
-        
-        console.log(`✓ ${estudiantes?.length || 0} estudiantes cargados correctamente`);
-        mostrarEstudiantes(estudiantes || []);
-        
-    } catch (error) {
-        console.error('Error al cargar estudiantes:', error);
-        mostrarMensaje(`Error al cargar los estudiantes: ${error.message}`, 'error');
-        
-        // Mostrar tabla vacía en caso de error
-        mostrarEstudiantes([]);
     }
-}
 
-// Mostrar estudiantes en la tabla
-function mostrarEstudiantes(estudiantes) {
-    const tabla = document.getElementById('tablaEstudiantes');
-    
-    if (!estudiantes || estudiantes.length === 0) {
-        tabla.innerHTML = `
-            <tr>
-                <td colspan="6" class="empty-message">
-                    No hay estudiantes registrados. ¡Registra el primero!
-                </td>
-            </tr>
-        `;
-        return;
+    obtenerDatosFormulario() {
+        return {
+            codigo: document.getElementById('codigo').value,
+            nombre: document.getElementById('nombre').value,
+            email: document.getElementById('email').value,
+            telefono: document.getElementById('telefono').value,
+            curso: document.getElementById('curso').value,
+            fecha_nacimiento: document.getElementById('fechaNacimiento').value
+        };
     }
-    
-    let html = '';
-    
-    estudiantes.forEach(estudiante => {
-        // Formatear fecha para mostrar
-        let fechaFormateada = 'No especificada';
-        if (estudiante.fecha_nacimiento) {
-            const fecha = new Date(estudiante.fecha_nacimiento);
-            fechaFormateada = fecha.toLocaleDateString('es-ES');
-        }
-        
-        html += `
-            <tr>
-                <td><strong>${estudiante.codigo}</strong></td>
-                <td>${estudiante.nombre}</td>
-                <td>${estudiante.email || 'No especificado'}</td>
-                <td>${estudiante.curso || 'No especificado'}</td>
-                <td>${estudiante.telefono || 'No especificado'}</td>
-                <td>
-                    <div class="acciones-botones">
-                        <button class="btn-accion btn-editar" onclick="editarEstudiante('${estudiante.id}')">
-                            Editar
-                        </button>
-                        <button class="btn-accion btn-eliminar" onclick="eliminarEstudiante('${estudiante.id}')">
-                            Eliminar
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-    
-    tabla.innerHTML = html;
-}
 
-// Guardar estudiante (Crear o Actualizar)
-async function guardarEstudiante() {
-    const btnGuardar = document.getElementById('btnGuardar');
-    const textoOriginal = btnGuardar.textContent;
-    
-    // Validar campos obligatorios
-    const codigo = document.getElementById('codigo').value.trim();
-    const nombre = document.getElementById('nombre').value.trim();
-    
-    if (!codigo || !nombre) {
-        mostrarMensaje('Código y Nombre son campos obligatorios', 'error');
-        return;
-    }
-    
-    // Deshabilitar botón
-    btnGuardar.disabled = true;
-    btnGuardar.textContent = 'Guardando...';
-    
-    // Obtener datos del formulario
-    const estudianteData = {
-        codigo: codigo.toUpperCase(),
-        nombre: nombre,
-        email: document.getElementById('email').value.trim() || null,
-        telefono: document.getElementById('telefono').value || null,
-        curso: document.getElementById('curso').value || null,
-        fecha_nacimiento: document.getElementById('fechaNacimiento').value || null
-    };
-    
-    console.log('Datos a guardar:', estudianteData);
-    
-    try {
-        if (editando) {
-            // Actualizar estudiante existente
-            const id = document.getElementById('estudianteId').value;
-            
-            console.log('Actualizando estudiante ID:', id);
-            
-            const { data, error } = await supabase
-                .from('estudiantes')
-                .update(estudianteData)
-                .eq('id', id);
-            
-            if (error) throw error;
-            
-            console.log('Estudiante actualizado:', data);
-            mostrarMensaje('✓ Estudiante actualizado correctamente', 'exito');
-            
-        } else {
-            // Crear nuevo estudiante
-            console.log('Creando nuevo estudiante...');
-            
-            const { data, error } = await supabase
-                .from('estudiantes')
-                .insert([estudianteData])
-                .select();
-            
-            if (error) throw error;
-            
-            console.log('Estudiante creado:', data);
-            mostrarMensaje('✓ Estudiante registrado correctamente', 'exito');
+    validarFormulario() {
+        const codigo = document.getElementById('codigo').value;
+        const email = document.getElementById('email').value;
+        const telefono = document.getElementById('telefono').value;
+        const fechaNacimiento = new Date(document.getElementById('fechaNacimiento').value);
+        const hoy = new Date();
+        
+        // Validar formato de código
+        if (!codigo.match(/^[A-Z]{2}-[0-9]{2}$/)) {
+            this.mostrarMensaje('El código debe tener el formato AB-12 (dos letras, guión, dos números)', 'error');
+            return false;
         }
         
-        // Recargar la lista y resetear formulario
-        resetearFormulario();
-        await cargarEstudiantes();
-        
-    } catch (error) {
-        console.error('Error completo:', error);
-        
-        let mensaje = 'Error al guardar el estudiante';
-        
-        if (error.code === '23505') {
-            mensaje = 'El código de estudiante ya existe';
-        } else if (error.message) {
-            mensaje = '' + error.message;
+        // Validar email
+        if (!email.includes('@')) {
+            this.mostrarMensaje('Por favor ingrese un email válido', 'error');
+            return false;
         }
         
-        mostrarMensaje(mensaje, 'error');
+        // Validar teléfono
+        if (!telefono.match(/^\d{9}$/)) {
+            this.mostrarMensaje('El teléfono debe tener 9 dígitos', 'error');
+            return false;
+        }
         
-    } finally {
-        // Restaurar botón
-        btnGuardar.disabled = false;
-        btnGuardar.textContent = textoOriginal;
+        // Validar edad mínima (16 años)
+        const edadMinima = new Date();
+        edadMinima.setFullYear(hoy.getFullYear() - 16);
+        
+        if (fechaNacimiento > edadMinima) {
+            this.mostrarMensaje('El estudiante debe tener al menos 16 años', 'error');
+            return false;
+        }
+        
+        return true;
     }
-}
 
-// Editar estudiante
-async function editarEstudiante(id) {
-    try {
-        console.log('Editando estudiante ID:', id);
-        
-        const { data: estudiante, error } = await supabase
+    async crearEstudiante(estudiante) {
+        // Verificar si el código ya existe
+        const { data: existente, error: errorBusqueda } = await supabase
             .from('estudiantes')
-            .select('*')
-            .eq('id', id)
+            .select('codigo')
+            .eq('codigo', estudiante.codigo)
             .single();
         
-        if (error) throw error;
+        if (existente) {
+            throw new Error('Ya existe un estudiante con este código');
+        }
         
-        console.log('Datos del estudiante:', estudiante);
+        // Insertar nuevo estudiante
+        const { data, error } = await supabase
+            .from('estudiantes')
+            .insert([estudiante]);
         
-        // Llenar formulario con datos del estudiante
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        this.mostrarMensaje('Estudiante registrado exitosamente', 'exito');
+        this.limpiarFormulario();
+        await this.cargarEstudiantes();
+    }
+
+    async actualizarEstudiante(estudiante) {
+        const { error } = await supabase
+            .from('estudiantes')
+            .update(estudiante)
+            .eq('id', this.estudianteActual.id);
+        
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        this.mostrarMensaje('Estudiante actualizado exitosamente', 'exito');
+        this.cancelarEdicion();
+        await this.cargarEstudiantes();
+    }
+
+    async cargarEstudiantes() {
+        try {
+            const { data: estudiantes, error } = await supabase
+                .from('estudiantes')
+                .select('*')
+                .order('nombre');
+            
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+            this.mostrarEstudiantes(estudiantes || []);
+            
+        } catch (error) {
+            console.error('Error al cargar estudiantes:', error);
+            this.mostrarMensaje('Error al cargar los estudiantes', 'error');
+        }
+    }
+
+    async buscarEstudiantes() {
+        const termino = document.getElementById('buscar').value.trim();
+        
+        if (!termino) {
+            await this.cargarEstudiantes();
+            return;
+        }
+        
+        try {
+            const { data: estudiantes, error } = await supabase
+                .from('estudiantes')
+                .select('*')
+                .or(`nombre.ilike.%${termino}%,codigo.ilike.%${termino}%,curso.ilike.%${termino}%`)
+                .order('nombre');
+            
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+            this.mostrarEstudiantes(estudiantes || []);
+            
+        } catch (error) {
+            console.error('Error al buscar estudiantes:', error);
+            this.mostrarMensaje('Error al buscar estudiantes', 'error');
+        }
+    }
+
+    mostrarEstudiantes(estudiantes) {
+        const tbody = document.getElementById('tablaEstudiantes');
+        
+        if (!estudiantes || estudiantes.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-message">No hay estudiantes registrados</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = estudiantes.map(estudiante => {
+            // Formatear fecha de nacimiento
+            const fechaNac = estudiante.fecha_nacimiento ? 
+                new Date(estudiante.fecha_nacimiento).toLocaleDateString('es-ES') : 
+                'No especificada';
+            
+            return `
+                <tr>
+                    <td>${estudiante.codigo}</td>
+                    <td>${estudiante.nombre}</td>
+                    <td>${estudiante.email}</td>
+                    <td>${estudiante.curso}</td>
+                    <td>${estudiante.telefono}</td>
+                    <td>${fechaNac}</td>
+                    <td class="acciones">
+                        <button class="btn-accion btn-editar" onclick="gestorEstudiantes.editarEstudiante(${estudiante.id})">Editar</button>
+                        <button class="btn-accion btn-eliminar" onclick="gestorEstudiantes.eliminarEstudiante(${estudiante.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    editarEstudiante(id) {
+        this.cargarEstudianteParaEditar(id);
+    }
+
+    async cargarEstudianteParaEditar(id) {
+        try {
+            const { data: estudiante, error } = await supabase
+                .from('estudiantes')
+                .select('*')
+                .eq('id', id)
+                .single();
+            
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+            if (estudiante) {
+                this.estudianteActual = estudiante;
+                this.llenarFormulario(estudiante);
+                
+                document.getElementById('form-titulo').textContent = 'Editar Estudiante';
+                document.getElementById('btnGuardar').textContent = 'Actualizar Estudiante';
+                
+                // Hacer scroll al formulario
+                document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+            }
+            
+        } catch (error) {
+            console.error('Error al cargar estudiante:', error);
+            this.mostrarMensaje('Error al cargar el estudiante', 'error');
+        }
+    }
+
+    llenarFormulario(estudiante) {
         document.getElementById('estudianteId').value = estudiante.id;
         document.getElementById('codigo').value = estudiante.codigo;
         document.getElementById('nombre').value = estudiante.nombre;
-        document.getElementById('email').value = estudiante.email || '';
-        document.getElementById('telefono').value = estudiante.telefono || '';
-        document.getElementById('curso').value = estudiante.curso || '';
-        document.getElementById('fechaNacimiento').value = estudiante.fecha_nacimiento || '';
+        document.getElementById('email').value = estudiante.email;
+        document.getElementById('telefono').value = estudiante.telefono;
+        document.getElementById('curso').value = estudiante.curso;
         
-        // Cambiar a modo edición
-        editando = true;
-        document.getElementById('form-titulo').textContent = 'Editar Estudiante';
-        document.getElementById('btnGuardar').textContent = 'Actualizar Estudiante';
-        document.getElementById('btnCancelar').style.display = 'inline-block';
-        document.getElementById('codigo').disabled = true;
-        
-        // Desplazarse al formulario
-        document.getElementById('formEstudiante').scrollIntoView({ 
-            behavior: 'smooth' 
-        });
-        
-        mostrarMensaje(`Editando estudiante: ${estudiante.nombre}`, 'exito');
-        
-    } catch (error) {
-        console.error('Error al cargar estudiante:', error);
-        mostrarMensaje('❌ Error al cargar los datos del estudiante', 'error');
+        if (estudiante.fecha_nacimiento) {
+            const fecha = new Date(estudiante.fecha_nacimiento);
+            document.getElementById('fechaNacimiento').value = fecha.toISOString().split('T')[0];
+        }
     }
-}
 
-// Eliminar estudiante
-async function eliminarEstudiante(id) {
-    if (!confirm('¿Estás seguro de eliminar este estudiante?\nEsta acción no se puede deshacer.')) {
-        return;
-    }
-    
-    try {
-        console.log('Eliminando estudiante ID:', id);
-        
-        const { error } = await supabase
-            .from('estudiantes')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        mostrarMensaje('✓ Estudiante eliminado correctamente', 'exito');
-        await cargarEstudiantes();
-        
-    } catch (error) {
-        console.error('Error al eliminar estudiante:', error);
-        mostrarMensaje('❌ Error al eliminar el estudiante', 'error');
-    }
-}
-
-// Buscar estudiantes
-async function buscarEstudiantes() {
-    const busqueda = document.getElementById('buscar').value.trim();
-    
-    if (!busqueda) {
-        await cargarEstudiantes();
-        return;
-    }
-    
-    try {
-        console.log('Buscando:', busqueda);
-        
-        const { data: estudiantes, error } = await supabase
-            .from('estudiantes')
-            .select('*')
-            .or(`nombre.ilike.%${busqueda}%,codigo.ilike.%${busqueda}%,email.ilike.%${busqueda}%`)
-            .order('nombre', { ascending: true });
-        
-        if (error) throw error;
-        
-        if (estudiantes.length === 0) {
-            mostrarMensaje(`No se encontraron estudiantes con: "${busqueda}"`, 'error');
+    async eliminarEstudiante(id) {
+        if (!confirm('¿Está seguro de eliminar este estudiante?')) {
+            return;
         }
         
-        mostrarEstudiantes(estudiantes);
+        try {
+            const { error } = await supabase
+                .from('estudiantes')
+                .delete()
+                .eq('id', id);
+            
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+            this.mostrarMensaje('Estudiante eliminado exitosamente', 'exito');
+            await this.cargarEstudiantes();
+            
+        } catch (error) {
+            console.error('Error al eliminar estudiante:', error);
+            this.mostrarMensaje('Error al eliminar el estudiante', 'error');
+        }
+    }
+
+    cancelarEdicion() {
+        this.estudianteActual = null;
+        this.limpiarFormulario();
         
-    } catch (error) {
-        console.error('Error al buscar:', error);
-        mostrarMensaje('❌ Error al buscar estudiantes', 'error');
+        document.getElementById('form-titulo').textContent = 'Registrar Nuevo Estudiante';
+        document.getElementById('btnGuardar').textContent = 'Registrar Estudiante';
+    }
+
+    limpiarFormulario() {
+        document.getElementById('formEstudiante').reset();
+        document.getElementById('estudianteId').value = '';
+    }
+
+    limpiarBusqueda() {
+        document.getElementById('buscar').value = '';
+        this.cargarEstudiantes();
+    }
+
+    mostrarMensaje(texto, tipo) {
+        const mensaje = document.getElementById('mensaje');
+        mensaje.textContent = texto;
+        mensaje.className = `mensaje ${tipo}`;
+        
+        // Ocultar después de 5 segundos
+        setTimeout(() => {
+            mensaje.className = 'mensaje';
+        }, 5000);
     }
 }
 
-// Resetear formulario
-function resetearFormulario() {
-    document.getElementById('formEstudiante').reset();
-    document.getElementById('estudianteId').value = '';
-    
-    editando = false;
-    document.getElementById('form-titulo').textContent = 'Registrar Nuevo Estudiante';
-    document.getElementById('btnGuardar').textContent = 'Registrar Estudiante';
-    document.getElementById('btnCancelar').style.display = 'none';
-    document.getElementById('codigo').disabled = false;
-    
-    // Enfocar el primer campo
-    document.getElementById('codigo').focus();
-}
-
-// Mostrar mensajes
-function mostrarMensaje(texto, tipo) {
-    const mensajeDiv = document.getElementById('mensaje');
-    
-    mensajeDiv.textContent = texto;
-    mensajeDiv.className = `mensaje ${tipo}`;
-    mensajeDiv.style.display = 'block';
-    
-    // Ocultar después de 5 segundos
-    setTimeout(() => {
-        mensajeDiv.style.display = 'none';
-    }, 5000);
-}
-
-// Exportar funciones al scope global para los botones onclick
-window.editarEstudiante = editarEstudiante;
-window.eliminarEstudiante = eliminarEstudiante;
-window.buscarEstudiantes = buscarEstudiantes;
+// Inicializar cuando el DOM esté listo
+let gestorEstudiantes;
+document.addEventListener('DOMContentLoaded', () => {
+    gestorEstudiantes = new GestorEstudiantes();
+    window.gestorEstudiantes = gestorEstudiantes; // Hacerlo global para los onclick
+});

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNICONNECT - Estudiantes</title>
+    <title>UNICONNECT - Gestión de Estudiantes</title>
     <link rel="stylesheet" href="estilos_proyec.css">
     <link rel="stylesheet" href="estilos_estudiantes.css">
 </head>
@@ -15,7 +15,6 @@
                 <h1>Gestión de Estudiantes</h1>
             </div>
         </div>
-        
     </header>
 
     <nav>
@@ -36,34 +35,39 @@
                 <input type="hidden" id="estudianteId">
                 
                 <div class="form-group">
-                    <label for="codigo">Código:</label>
-                    <input type="text" id="codigo" required 
+                    <label for="codigo">Código de Estudiante:</label>
+                    <input type="text" id="codigo" 
                            pattern="[A-Z]{2}-[0-9]{2}" 
+                           title="Formato: AB-12 (dos letras, guión, dos números)"
                            placeholder="AB-12"
-                           title="Dos letras, guión, dos números (ej: AB-12)">
+                           required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="nombre">Nombre Completo:</label>
-                    <input type="text" id="nombre" required 
+                    <input type="text" id="nombre" 
                            minlength="3" maxlength="100"
-                           placeholder="Juan Pérez García">
+                           title="Mínimo 3 caracteres"
+                           placeholder="Juan Pérez García"
+                           required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="email">Correo Electrónico:</label>
-                    <input type="email" id="email" required 
-                           placeholder="ejemplo@uniconnect.edu">
+                    <input type="email" id="email" 
+                           placeholder="estudiante@uniconnect.edu"
+                           required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="telefono">Teléfono:</label>
-                    <input type="tel" id="telefono" required 
+                    <input type="tel" id="telefono" 
                            pattern="[0-9]{9}"
+                           title="9 dígitos sin espacios"
                            placeholder="912345678"
-                           title="9 dígitos sin espacios">
+                           required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="curso">Curso:</label>
                     <select id="curso" required>
@@ -74,10 +78,11 @@
                         <option value="Derecho">Derecho</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="fechaNacimiento">Fecha de Nacimiento:</label>
-                    <input type="date" id="fechaNacimiento" required>
+                    <input type="date" id="fechaNacimiento" 
+                           required>
                 </div>
                 
                 <div class="form-buttons">
@@ -93,7 +98,7 @@
             <h2>Estudiantes Registrados</h2>
             
             <div class="search-box">
-                <input type="text" id="buscar" placeholder="Buscar por nombre o código...">
+                <input type="text" id="buscar" placeholder="Buscar por nombre, código o curso...">
                 <button class="btn btn-small" id="btnBuscar">Buscar</button>
                 <button class="btn btn-small btn-secondary" id="btnLimpiar">Limpiar</button>
             </div>
@@ -107,12 +112,13 @@
                             <th>Email</th>
                             <th>Curso</th>
                             <th>Teléfono</th>
+                            <th>Fecha Nacimiento</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaEstudiantes">
                         <tr>
-                            <td colspan="6" class="empty-message">Cargando estudiantes...</td>
+                            <td colspan="7" class="empty-message">Cargando estudiantes...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -126,9 +132,7 @@
         </div>
     </footer>
 
-    <!-- Cargar Supabase desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Nuestro archivo JavaScript -->
-    <script src="estudiantes.js"></script>
+    <script type="module" src="estudiantes.js"></script>
 </body>
 </html>

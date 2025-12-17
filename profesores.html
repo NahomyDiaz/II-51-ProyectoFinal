@@ -3,19 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNICONNECT - Registro Profesores</title>
+    <title>UNICONNECT - Gestión de Profesores</title>
     <link rel="stylesheet" href="estilos_proyec.css">
+    <link rel="stylesheet" href="estilos_profesores.css">
 </head>
 <body>
     <header>
-        <div class="logo">UNICONNECT</div>
-        <h1>Registro de Profesores</h1>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">UNICONNECT</div>
+                <h1>Gestión de Profesores</h1>
+            </div>
+        </div>
     </header>
 
     <nav>
         <ul>
             <li><a href="principal.html">Inicio</a></li>
             <li><a href="estudiantes.html">Estudiantes</a></li>
+            <li><a href="profesores.html" class="active">Profesores</a></li>
             <li><a href="cursos.html">Cursos</a></li>
             <li><a href="index.html">Cerrar Sesión</a></li>
         </ul>
@@ -23,12 +29,14 @@
 
     <main class="container">
         <section class="form-section">
-            <h2>Nuevo Profesor</h2>
+            <h2 id="form-titulo">Registrar Nuevo Profesor</h2>
             
-            <form class="registro-form" action="profesores.html" method="get">
+            <form class="registro-form" id="formProfesor">
+                <input type="hidden" id="profesorId">
+                
                 <div class="form-group">
                     <label for="codigo">Código de Profesor:</label>
-                    <input type="text" id="codigo" name="codigo" 
+                    <input type="text" id="codigo" 
                            pattern="PROF[0-9]{1,2}" 
                            title="Formato: PROF1, PROF2, etc."
                            placeholder="PROF1"
@@ -37,7 +45,7 @@
 
                 <div class="form-group">
                     <label for="nombre">Nombre Completo:</label>
-                    <input type="text" id="nombre" name="nombre" 
+                    <input type="text" id="nombre" 
                            minlength="3" maxlength="50"
                            title="Mínimo 3 caracteres"
                            required>
@@ -45,14 +53,14 @@
 
                 <div class="form-group">
                     <label for="email">Correo Electrónico:</label>
-                    <input type="email" id="email" name="email" 
+                    <input type="email" id="email" 
                            placeholder="profesor@uniconnect.edu"
                            required>
                 </div>
 
                 <div class="form-group">
                     <label for="especialidad">Especialidad:</label>
-                    <input type="text" id="especialidad" name="especialidad" 
+                    <input type="text" id="especialidad" 
                            minlength="3" maxlength="30"
                            title="Especialidad del profesor"
                            required>
@@ -60,7 +68,7 @@
 
                 <div class="form-group">
                     <label for="departamento">Departamento:</label>
-                    <select id="departamento" name="departamento" required>
+                    <select id="departamento" required>
                         <option value="">Seleccione departamento</option>
                         <option value="Ingeniería">Ingeniería</option>
                         <option value="Administración">Administración</option>
@@ -72,7 +80,7 @@
 
                 <div class="form-group">
                     <label for="telefono">Teléfono:</label>
-                    <input type="tel" id="telefono" name="telefono" 
+                    <input type="tel" id="telefono" 
                            pattern="[0-9]{9}"
                            title="9 dígitos sin espacios"
                            required>
@@ -80,20 +88,62 @@
 
                 <div class="form-group">
                     <label for="experiencia">Años de Experiencia:</label>
-                    <input type="number" id="experiencia" name="experiencia" 
+                    <input type="number" id="experiencia" 
                            min="0" max="50"
                            title="Años de experiencia docente"
                            required>
                 </div>
-
-                <button type="submit" class="btn">Registrar Profesor</button>
-                <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
+                
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Registrar Profesor</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelar">Cancelar</button>
+                </div>
             </form>
+            
+            <div id="mensaje" class="mensaje"></div>
+        </section>
+        
+        <section class="list-section">
+            <h2>Profesores Registrados</h2>
+            
+            <div class="search-box">
+                <input type="text" id="buscar" placeholder="Buscar por nombre, código o especialidad...">
+                <button class="btn btn-small" id="btnBuscar">Buscar</button>
+                <button class="btn btn-small btn-secondary" id="btnLimpiar">Limpiar</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Especialidad</th>
+                            <th>Departamento</th>
+                            <th>Teléfono</th>
+                            <th>Experiencia</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaProfesores">
+                        <tr>
+                            <td colspan="8" class="empty-message">Cargando profesores...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2023 UNICONNECT - Todos los derechos reservados</p>
+        <div class="container">
+            <p>&copy; 2023 UNICONNECT - Todos los derechos reservados</p>
+        </div>
     </footer>
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="profesores.js"></script>
 </body>
 </html>
