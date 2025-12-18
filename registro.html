@@ -179,10 +179,7 @@
     </footer>
 
 <script type="module">
-    // Importar el cliente de Supabase que ya tienes
     import { supabase } from './supabaseClient.js';
-    
-    // Código del registro (copiado de registro.js)
     function validarContraseñas() {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm_password').value;
@@ -295,8 +292,6 @@
             }
         });
     }
-    
-    // Inicializar
     document.addEventListener('DOMContentLoaded', function() {
         const registroForm = document.getElementById('registroForm');
         if (registroForm) {
