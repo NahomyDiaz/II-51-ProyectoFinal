@@ -1,20 +1,27 @@
-// profesores.js - Gestión de profesores con Supabase (versión simplificada)
+// profesores.js - Versión corregida
 import { supabase } from './supabaseClient.js';
 
+// Variables globales
+let profesorEditando = null;
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Página de profesores cargada');
+    console.log('DOM cargado');
     
     // Inicializar
-    cargarProfesores();
     setupEventListeners();
+    cargarProfesores();
 });
 
-// Configurar eventos
 function setupEventListeners() {
-    // Formulario de registro/edición
+    console.log('Configurando eventos...');
+    
+    // Formulario
     const form = document.getElementById('formProfesor');
     if (form) {
         form.addEventListener('submit', handleSubmit);
+        console.log('Formulario configurado');
+    } else {
+        console.error('No se encontró formProfesor');
     }
     
     // Botones
@@ -22,9 +29,20 @@ function setupEventListeners() {
     const btnBuscar = document.getElementById('btnBuscar');
     const btnLimpiar = document.getElementById('btnLimpiar');
     
-    if (btnCancelar) btnCancelar.addEventListener('click', cancelarEdicion);
-    if (btnBuscar) btnBuscar.addEventListener('click', buscarProfesores);
-    if (btnLimpiar) btnLimpiar.addEventListener('click', limpiarBusqueda);
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', cancelarEdicion);
+        console.log('Botón cancelar configurado');
+    }
+    
+    if (btnBuscar) {
+        btnBuscar.addEventListener('click', buscarProfesores);
+        console.log('Botón buscar configurado');
+    }
+    
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', limpiarBusqueda);
+        console.log('Botón limpiar configurado');
+    }
     
     // Buscar con Enter
     const buscarInput = document.getElementById('buscar');
@@ -35,24 +53,26 @@ function setupEventListeners() {
                 buscarProfesores();
             }
         });
+        console.log('Input búsqueda configurado');
     }
+    
+    // Hacer funciones globales
+    window.editarProfesor = editarProfesor;
+    window.eliminarProfesor = eliminarProfesor;
+    
+    console.log('Todos los eventos configurados');
 }
 
-// Variables globales
-let profesorEditando = null;
+// =========== FUNCIONES PRINCIPALES ===========
 
-// Manejar envío del formulario
 async function handleSubmit(e) {
     e.preventDefault();
+    console.log('Enviando formulario...');
     
-    console.log('📝 Enviando formulario...');
-    
-    // Validar formulario
     if (!validarFormulario()) {
         return;
     }
     
-    // Obtener datos del formulario
     const profesorData = {
         codigo: document.getElementById('codigo').value.trim(),
         nombre: document.getElementById('nombre').value.trim(),
@@ -63,87 +83,81 @@ async function handleSubmit(e) {
         experiencia: parseInt(document.getElementById('experiencia').value)
     };
     
-    console.log('Datos del profesor:', profesorData);
+    console.log('Datos:', profesorData);
     
     const btnGuardar = document.getElementById('btnGuardar');
     const textoOriginal = btnGuardar.textContent;
     
-    // Cambiar estado del botón
     btnGuardar.disabled = true;
     btnGuardar.textContent = 'Guardando...';
     
     try {
         if (profesorEditando) {
-            // Actualizar profesor existente
+            console.log('Actualizando profesor ID:', profesorEditando.id);
             await actualizarProfesor(profesorEditando.id, profesorData);
-            mostrarMensaje('✅ Profesor actualizado exitosamente', 'exito');
+            mostrarMensaje('Profesor actualizado exitosamente', 'exito');
         } else {
-            // Crear nuevo profesor
+            console.log('Creando nuevo profesor');
             await crearProfesor(profesorData);
-            mostrarMensaje('✅ Profesor registrado exitosamente', 'exito');
+            mostrarMensaje('Profesor registrado exitosamente', 'exito');
         }
         
-        // Limpiar formulario y recargar lista
         limpiarFormulario();
         await cargarProfesores();
         
     } catch (error) {
-        console.error('❌ Error:', error);
-        mostrarMensaje('❌ Error: ' + error.message, 'error');
+        console.error('Error:', error);
+        mostrarMensaje('Error: ' + error.message, 'error');
     } finally {
-        // Restaurar botón
         btnGuardar.disabled = false;
         btnGuardar.textContent = textoOriginal;
     }
 }
 
-// Validar formulario
 function validarFormulario() {
     const codigo = document.getElementById('codigo').value.trim();
     const email = document.getElementById('email').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
     const experiencia = document.getElementById('experiencia').value;
     
-    // Validar código (PROF seguido de números)
     if (!/^PROF\d{1,4}$/i.test(codigo)) {
-        mostrarMensaje('❌ El código debe ser PROF seguido de números (ej: PROF001)', 'error');
+        mostrarMensaje('El código debe ser PROF seguido de números (ej: PROF001)', 'error');
         return false;
     }
     
-    // Validar email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        mostrarMensaje('❌ Ingrese un email válido', 'error');
+        mostrarMensaje('Ingrese un email válido', 'error');
         return false;
     }
     
-    // Validar teléfono (9 dígitos)
     if (!/^\d{9}$/.test(telefono)) {
-        mostrarMensaje('❌ El teléfono debe tener 9 dígitos', 'error');
+        mostrarMensaje('El teléfono debe tener 9 dígitos', 'error');
         return false;
     }
     
-    // Validar experiencia (0-50)
     const expNum = parseInt(experiencia);
     if (isNaN(expNum) || expNum < 0 || expNum > 50) {
-        mostrarMensaje('❌ La experiencia debe ser entre 0 y 50 años', 'error');
+        mostrarMensaje('La experiencia debe ser entre 0 y 50 años', 'error');
         return false;
     }
     
     return true;
 }
 
-// Crear nuevo profesor
+// =========== OPERACIONES CRUD ===========
+
 async function crearProfesor(profesorData) {
-    console.log('Creando profesor:', profesorData);
+    console.log('Creando profesor en Supabase...');
     
     const { data, error } = await supabase
         .from('profesores')
         .insert([profesorData])
-        .select()
-        .single();
+        .select();
+    
+    console.log('Respuesta Supabase:', { data, error });
     
     if (error) {
-        console.error('Error Supabase:', error);
+        console.error('Error de Supabase:', error);
         if (error.code === '23505') {
             if (error.message.includes('profesores_codigo_key')) {
                 throw new Error('Ya existe un profesor con este código');
@@ -158,7 +172,6 @@ async function crearProfesor(profesorData) {
     return data;
 }
 
-// Actualizar profesor existente
 async function actualizarProfesor(id, profesorData) {
     console.log('Actualizando profesor ID:', id);
     
@@ -166,20 +179,19 @@ async function actualizarProfesor(id, profesorData) {
         .from('profesores')
         .update(profesorData)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
+    
+    console.log('Respuesta actualización:', { data, error });
     
     if (error) {
-        console.error('Error Supabase:', error);
         throw new Error(error.message || 'Error al actualizar profesor');
     }
     
     return data;
 }
 
-// Cargar lista de profesores
 async function cargarProfesores() {
-    console.log('📋 Cargando profesores...');
+    console.log('Cargando profesores...');
     
     const tbody = document.getElementById('tablaProfesores');
     if (!tbody) {
@@ -187,11 +199,11 @@ async function cargarProfesores() {
         return;
     }
     
-    // Mostrar estado de carga
+    // Mostrar loading
     tbody.innerHTML = `
         <tr>
-            <td colspan="8" style="text-align: center; padding: 20px;">
-                <div style="color: #4a90a4;">Cargando profesores...</div>
+            <td colspan="8" style="text-align: center; padding: 40px; color: #4a90a4;">
+                <div>Cargando profesores...</div>
             </td>
         </tr>
     `;
@@ -202,16 +214,16 @@ async function cargarProfesores() {
             .select('*')
             .order('nombre');
         
+        console.log('Profesores cargados:', profesores, error);
+        
         if (error) {
             throw new Error(error.message);
         }
         
-        console.log('Profesores cargados:', profesores?.length || 0);
-        
         if (!profesores || profesores.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 20px; color: #718096;">
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #718096;">
                         No hay profesores registrados
                     </td>
                 </tr>
@@ -222,54 +234,57 @@ async function cargarProfesores() {
         // Generar tabla
         tbody.innerHTML = profesores.map(profesor => `
             <tr>
-                <td>${profesor.codigo}</td>
-                <td>${profesor.nombre}</td>
-                <td>${profesor.email}</td>
-                <td>${profesor.especialidad}</td>
-                <td>${profesor.departamento}</td>
-                <td>${profesor.telefono}</td>
-                <td>${profesor.experiencia} años</td>
+                <td>${profesor.codigo || ''}</td>
+                <td>${profesor.nombre || ''}</td>
+                <td>${profesor.email || ''}</td>
+                <td>${profesor.especialidad || ''}</td>
+                <td>${profesor.departamento || ''}</td>
+                <td>${profesor.telefono || ''}</td>
+                <td>${profesor.experiencia || 0} años</td>
                 <td>
                     <button onclick="editarProfesor(${profesor.id})" 
-                            style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+                            style="background: #4299e1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 14px;">
                         Editar
                     </button>
                     <button onclick="eliminarProfesor(${profesor.id})" 
-                            style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                            style="background: #f56565; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                         Eliminar
                     </button>
                 </td>
             </tr>
         `).join('');
         
+        console.log(`${profesores.length} profesores mostrados`);
+        
     } catch (error) {
         console.error('Error cargando profesores:', error);
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align: center; padding: 20px; color: #e53e3e;">
-                    Error al cargar profesores: ${error.message}
+                <td colspan="8" style="text-align: center; padding: 40px; color: #e53e3e;">
+                    <div>Error al cargar profesores</div>
+                    <div style="font-size: 12px; margin-top: 10px;">${error.message}</div>
                 </td>
             </tr>
         `;
     }
 }
 
-// Buscar profesores
+// =========== BÚSQUEDA ===========
+
 async function buscarProfesores() {
     const termino = document.getElementById('buscar').value.trim();
+    console.log('Buscando:', termino);
     
     if (!termino) {
         await cargarProfesores();
         return;
     }
     
-    console.log('🔍 Buscando:', termino);
-    
     const tbody = document.getElementById('tablaProfesores');
     tbody.innerHTML = `
         <tr>
-            <td colspan="8" style="text-align: center; padding: 20px;">
-                <div style="color: #4a90a4;">Buscando...</div>
+            <td colspan="8" style="text-align: center; padding: 40px; color: #4a90a4;">
+                <div>Buscando "${termino}"...</div>
             </td>
         </tr>
     `;
@@ -286,7 +301,7 @@ async function buscarProfesores() {
         if (!profesores || profesores.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 20px; color: #718096;">
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #718096;">
                         No se encontraron profesores con "${termino}"
                     </td>
                 </tr>
@@ -296,20 +311,20 @@ async function buscarProfesores() {
         
         tbody.innerHTML = profesores.map(profesor => `
             <tr>
-                <td>${profesor.codigo}</td>
-                <td>${profesor.nombre}</td>
-                <td>${profesor.email}</td>
-                <td>${profesor.especialidad}</td>
-                <td>${profesor.departamento}</td>
-                <td>${profesor.telefono}</td>
-                <td>${profesor.experiencia} años</td>
+                <td>${profesor.codigo || ''}</td>
+                <td>${profesor.nombre || ''}</td>
+                <td>${profesor.email || ''}</td>
+                <td>${profesor.especialidad || ''}</td>
+                <td>${profesor.departamento || ''}</td>
+                <td>${profesor.telefono || ''}</td>
+                <td>${profesor.experiencia || 0} años</td>
                 <td>
                     <button onclick="editarProfesor(${profesor.id})" 
-                            style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+                            style="background: #4299e1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 14px;">
                         Editar
                     </button>
                     <button onclick="eliminarProfesor(${profesor.id})" 
-                            style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                            style="background: #f56565; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                         Eliminar
                     </button>
                 </td>
@@ -318,14 +333,15 @@ async function buscarProfesores() {
         
     } catch (error) {
         console.error('Error buscando:', error);
-        mostrarMensaje('❌ Error al buscar: ' + error.message, 'error');
+        mostrarMensaje('Error al buscar: ' + error.message, 'error');
         await cargarProfesores();
     }
 }
 
-// Editar profesor
+// =========== EDICIÓN Y ELIMINACIÓN ===========
+
 async function editarProfesor(id) {
-    console.log('✏️ Editando profesor ID:', id);
+    console.log('Editando profesor ID:', id);
     
     try {
         const { data: profesor, error } = await supabase
@@ -360,17 +376,16 @@ async function editarProfesor(id) {
         
     } catch (error) {
         console.error('Error cargando profesor:', error);
-        mostrarMensaje('❌ Error al cargar profesor: ' + error.message, 'error');
+        mostrarMensaje('Error al cargar profesor: ' + error.message, 'error');
     }
 }
 
-// Eliminar profesor
 async function eliminarProfesor(id) {
     if (!confirm('¿Está seguro de eliminar este profesor?')) {
         return;
     }
     
-    console.log('🗑️ Eliminando profesor ID:', id);
+    console.log('Eliminando profesor ID:', id);
     
     try {
         const { error } = await supabase
@@ -380,7 +395,7 @@ async function eliminarProfesor(id) {
         
         if (error) throw error;
         
-        mostrarMensaje('✅ Profesor eliminado exitosamente', 'exito');
+        mostrarMensaje('Profesor eliminado exitosamente', 'exito');
         await cargarProfesores();
         
         // Si estábamos editando este profesor, limpiar formulario
@@ -390,11 +405,12 @@ async function eliminarProfesor(id) {
         
     } catch (error) {
         console.error('Error eliminando:', error);
-        mostrarMensaje('❌ Error al eliminar: ' + error.message, 'error');
+        mostrarMensaje('Error al eliminar: ' + error.message, 'error');
     }
 }
 
-// Cancelar edición
+// =========== FUNCIONES AUXILIARES ===========
+
 function cancelarEdicion() {
     profesorEditando = null;
     limpiarFormulario();
@@ -403,21 +419,21 @@ function cancelarEdicion() {
     mostrarMensaje('Edición cancelada', 'exito');
 }
 
-// Limpiar formulario
 function limpiarFormulario() {
     document.getElementById('formProfesor').reset();
 }
 
-// Limpiar búsqueda
 function limpiarBusqueda() {
     document.getElementById('buscar').value = '';
     cargarProfesores();
 }
 
-// Mostrar mensaje
 function mostrarMensaje(texto, tipo) {
     const mensajeDiv = document.getElementById('mensaje');
-    if (!mensajeDiv) return;
+    if (!mensajeDiv) {
+        console.error('No se encontró elemento mensaje');
+        return;
+    }
     
     mensajeDiv.textContent = texto;
     mensajeDiv.className = `mensaje ${tipo}`;
@@ -428,6 +444,13 @@ function mostrarMensaje(texto, tipo) {
     }, 5000);
 }
 
-// Hacer funciones globales para los botones onclick
-window.editarProfesor = editarProfesor;
-window.eliminarProfesor = eliminarProfesor;
+// Test de conexión al cargar
+console.log('Probando conexión a Supabase...');
+supabase.from('profesores').select('count', { count: 'exact', head: true })
+    .then(({ count, error }) => {
+        if (error) {
+            console.error('Error de conexión:', error);
+        } else {
+            console.log(`Conexión exitosa. ${count} profesores en la base de datos`);
+        }
+    });
