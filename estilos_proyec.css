@@ -269,6 +269,55 @@ footer {
     margin-top: 40px;
     border-top: 1px solid #4a90a4;
 }
+/* Estilos para botones de acciones en tablas */
+.acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 120px;
+}
+
+.btn-accion {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-align: center;
+    width: 100%;
+}
+
+.btn-editar {
+    background-color: #4299e1;
+    color: white;
+}
+
+.btn-editar:hover {
+    background-color: #3182ce;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
+}
+
+.btn-eliminar {
+    background-color: #f56565;
+    color: white;
+}
+
+.btn-eliminar:hover {
+    background-color: #e53e3e;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+}
+
+
+table th:nth-child(7),
+table th:nth-child(8),
+table th:last-child {  
+    min-width: 120px;
+    width: 120px;
+}
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
