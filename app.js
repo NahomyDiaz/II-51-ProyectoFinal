@@ -35,7 +35,6 @@ async function cargarEstudiantes() {
 
 // Llamar la función cuando se cargue la página
 document.addEventListener('DOMContentLoaded', cargarEstudiantes);
-// Manejar el formulario
 document.getElementById('formEstudiante').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -90,8 +89,6 @@ function mostrarMensaje(mensaje, tipo) {
         divMensaje.style.display = 'none';
     }, 5000);
 }
-
-// Configurar fecha límite (mínimo 16 años, máximo 60 años)
 document.addEventListener('DOMContentLoaded', function() {
     const fechaInput = document.getElementById('fechaNacimiento');
     const hoy = new Date();

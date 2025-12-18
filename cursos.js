@@ -1,4 +1,3 @@
-// cursos.js - Gestión de cursos con Supabase
 import { supabase } from './supabaseClient.js';
 
 class GestorCursos {
@@ -132,7 +131,7 @@ class GestorCursos {
     }
 
     async actualizarCurso(curso) {
-        // Eliminar created_at para no sobreescribirlo
+
         delete curso.created_at;
         
         const { error } = await supabase
@@ -208,7 +207,6 @@ class GestorCursos {
         }
         
         tbody.innerHTML = cursos.map(curso => {
-            // Truncar descripción si es muy larga
             const descripcionCorta = curso.descripcion && curso.descripcion.length > 50 
                 ? curso.descripcion.substring(0, 50) + '...' 
                 : curso.descripcion || 'Sin descripción';

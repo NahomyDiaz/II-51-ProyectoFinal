@@ -1,4 +1,3 @@
-// estudiantes.js - Gestión de estudiantes con Supabase
 import { supabase } from './supabaseClient.js';
 
 class GestorEstudiantes {

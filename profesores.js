@@ -1,13 +1,9 @@
-// profesores.js - Versión corregida
 import { supabase } from './supabaseClient.js';
 
-// Variables globales
 let profesorEditando = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM cargado');
-    
-    // Inicializar
     setupEventListeners();
     cargarProfesores();
 });
@@ -143,8 +139,6 @@ function validarFormulario() {
     
     return true;
 }
-
-// =========== OPERACIONES CRUD ===========
 
 async function crearProfesor(profesorData) {
     console.log('Creando profesor en Supabase...');
